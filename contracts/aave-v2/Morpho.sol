@@ -2,7 +2,8 @@
 pragma solidity 0.8.13;
 
 import "./MorphoGovernance.sol";
-
+import "./interfaces/IRelyer.sol";
+import "./interfaces/IMorpho.sol";
 contract Morpho is MorphoGovernance {
     using SafeTransferLib for ERC20;
     using DelegateCall for address;
@@ -126,7 +127,32 @@ contract Morpho is MorphoGovernance {
         address _borrower,
         uint256 _amount,
         uint256 _dstChainID
-    ) external nonReentrant  verifyCaller(_liquidator){
+    ) external nonReentrant  verifyCaller(_liquidator) ensureChainID(_dstChainID){
+        if (_amount == 0) revert AmountIsZero();
+        if(_dstChainID!=CURRENT_CHAINID){
+             //transferFrom asset,cross it
+            //crossCall();
+            address underlying=market[_poolTokenBorrowed].underlyingToken;
+            ERC20(underlying).safeTransferFrom(msg.sender, relyer, _amount);
+            IRelyer.MessageData crossMessage=IRelyer.MessageData({
+                user:msg.sender,
+                callData:abi.encodeWithSelector(
+                IMorpho.liquidate.selector,
+                _poolTokenBorrowed,
+                _poolTokenCollateral,
+                _liquidator,
+                _borrower,
+                _amount,
+                _dstChainID
+                )
+            });
+            IRelyer.EVMTokenAmount crossTokens=new IRelyer.EVMTokenAmount[](1);
+            crossToken.push(IRelyer.EVMTokenAmount({
+                token:underlying,
+                amount:_amount
+            }));
+            IRelyer(_relyer).sendMessageAndToken(_dstChainID,messageData,crossTokens);
+        }
         address(exitPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
                 IExitPositionsManager.liquidateLogic.selector,
@@ -134,8 +160,7 @@ contract Morpho is MorphoGovernance {
                 _poolTokenCollateral,
                 _liquidator,
                 _borrower,
-                _amount,
-                _dstChainID
+                _amount
             )
         );
     }
@@ -147,7 +172,31 @@ contract Morpho is MorphoGovernance {
         uint256 _amount,
         uint256 _maxGasForMatching,
         uint32 _dstChainID
-    ) internal {
+    ) internal ensureChainID(_dstChainID){
+        if (_amount == 0) revert AmountIsZero();
+        if(_dstChainID!=CURRENT_CHAINID){
+            //transferFrom asset,cross it
+            //crossCall();
+            address underlying=market[_poolToken].underlyingToken;
+            ERC20(underlying).safeTransferFrom(msg.sender, relyer, _amount);
+            IRelyer.MessageData crossMessage=IRelyer.MessageData({
+                user:msg.sender,
+                callData:abi.encodeWithSelector(
+                IMorpho.supply.selector,
+                _poolToken,
+                _onBehalf,
+                _amount,
+                _maxGasForMatching,
+                _dstChainID
+                )
+            });
+            IRelyer.EVMTokenAmount crossTokens=new IRelyer.EVMTokenAmount[](1);
+            crossToken.push(IRelyer.EVMTokenAmount({
+                token:underlying,
+                amount:_amount
+            }));
+            IRelyer(_relyer).sendMessageAndToken(_dstChainID,messageData,crossTokens);
+        }
         address(entryPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
                 IEntryPositionsManager.supplyLogic.selector,
@@ -155,8 +204,7 @@ contract Morpho is MorphoGovernance {
                 msg.sender,
                 _onBehalf,
                 _amount,
-                _maxGasForMatching,
-                _dstChainID
+                _maxGasForMatching
             )
         );
     }
@@ -167,15 +215,32 @@ contract Morpho is MorphoGovernance {
         address  _borrower,
         uint256 _maxGasForMatching,
         uint256 _dstChainID
-    ) internal {
+    ) internal ensureChainID(_dstChainID){
+        if (_amount == 0) revert AmountIsZero();
+        if(_dstChainID!=CURRENT_CHAINID){
+            //transferFrom asset,cross it
+            //crossCall();
+            IRelyer.MessageData crossMessage=IRelyer.MessageData({
+                user:msg.sender,
+                callData:abi.encodeWithSelector(
+                IMorpho.borrow.selector,
+                _poolToken,
+                _amount,
+                 _maxGasForMatching,
+                _onBehalf,
+                _dstChainID
+                )
+            });
+            
+            IRelyer(_relyer).sendMessage(_dstChainID,messageData);
+        }
         address(entryPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
                 IEntryPositionsManager.borrowLogic.selector,
                 _poolToken,
                 _amount,
                 _borrower,
-                _maxGasForMatching,
-                _dstChainID
+                _maxGasForMatching
             )
         );
     }
@@ -187,7 +252,24 @@ contract Morpho is MorphoGovernance {
         address _receiver,
         uint256 _maxGasForMatching,
         uint32 _dstChainID
-    ) internal {
+    ) internal ensureChainID(_dstChainID){
+        if (_amount == 0) revert AmountIsZero();
+        if(_dstChainID!=CURRENT_CHAINID){
+            //transferFrom asset,cross it
+            //crossCall();
+            IRelyer.MessageData crossMessage=IRelyer.MessageData({
+                user:msg.sender,
+                callData:abi.encodeWithSelector(
+                IMorpho.withdraw.selector,
+                _poolToken,
+                _amount,
+                _supplier,
+                _receiver,
+                _dstChainID
+                )
+            });
+            IRelyer(_relyer).sendMessage(_dstChainID,messageData);
+        }
         address(exitPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
                 IExitPositionsManager.withdrawLogic.selector,
@@ -195,8 +277,7 @@ contract Morpho is MorphoGovernance {
                 _amount,
                 _supplier,
                 _receiver,
-                _maxGasForMatching,
-                _dstChainID
+                _maxGasForMatching
             )
         );
     }
@@ -206,8 +287,31 @@ contract Morpho is MorphoGovernance {
         address _onBehalf,
         uint256 _amount,
         uint256 _maxGasForMatching,
-        uint32 _dstChaID
-    ) internal {
+        uint32 _dstChainID
+    ) internal ensureChainID(_dstChainID){
+        if (_amount == 0) revert AmountIsZero();
+        if(_dstChainID!=CURRENT_CHAINID){
+            //transferFrom asset,cross it
+            //crossCall();
+            address underlying=market[_poolToken].underlyingToken;
+            ERC20(underlying).safeTransferFrom(msg.sender, relyer, _amount);
+            IRelyer.MessageData crossMessage=IRelyer.MessageData({
+                user:msg.sender,
+                callData:abi.encodeWithSelector(
+                IMorpho.repay.selector,
+                _poolToken,
+                _onBehalf,
+                _amount,
+                _dstChainID
+                )
+            });
+            IRelyer.EVMTokenAmount crossTokens=new IRelyer.EVMTokenAmount[](1);
+            crossToken.push(IRelyer.EVMTokenAmount({
+                token:underlying,
+                amount:_amount
+            }));
+            IRelyer(_relyer).sendMessageAndToken(_dstChainID,messageData,crossTokens);
+        }
         address(exitPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
                 IExitPositionsManager.repayLogic.selector,
@@ -215,8 +319,7 @@ contract Morpho is MorphoGovernance {
                 msg.sender,
                 _onBehalf,
                 _amount,
-                _maxGasForMatching,
-                _dstChaID
+                _maxGasForMatching
             )
         );
     }

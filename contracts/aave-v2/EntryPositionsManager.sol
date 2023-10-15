@@ -12,7 +12,7 @@ contract EntryPositionsManager is PositionsManagerUtils {
     using WadRayMath for uint256;
     using Math for uint256;
 
-    event Supplied(
+        event Supplied(
         address indexed _from,
         address indexed _onBehalf,
         address indexed _poolToken,
@@ -21,7 +21,7 @@ contract EntryPositionsManager is PositionsManagerUtils {
         uint256 _balanceInP2P
     );
 
-    event Borrowed(
+        event Borrowed(
         address indexed _borrower,
         address indexed _poolToken,
         uint256 _amount,
@@ -29,14 +29,18 @@ contract EntryPositionsManager is PositionsManagerUtils {
         uint256 _balanceInP2P
     );
 
-    error BorrowingNotEnabled();
+        error BorrowingNotEnabled();
 
-    error UnauthorisedBorrow();
+        error UnauthorisedBorrow();
 
-    error SupplyIsPaused();
+        error SupplyIsPaused();
 
+    /// @notice Thrown when someone tries to borrow but the borrow is paused.
     error BorrowIsPaused();
 
+    /// STRUCTS ///
+
+    // Struct to avoid stack too deep.
     struct SupplyVars {
         uint256 remainingToSupply;
         uint256 poolBorrowIndex;
@@ -53,7 +57,7 @@ contract EntryPositionsManager is PositionsManagerUtils {
 
     /// LOGIC ///
 
-    function supplyLogic(
+        function supplyLogic(
         address _poolToken,
         address _repayer,
         address _onBehalf,
@@ -66,10 +70,10 @@ contract EntryPositionsManager is PositionsManagerUtils {
             //执行跨链调用supply;
             //发送代币，执行交易
             //safetransferFrom(),cross it;
-            ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
+ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
             underlyingToken.safeTransferFrom(_repayer, address(this), _amount);
-
-            //send message and token to crosschain;
+            
+                        //send message and token to crosschain;
             //crossCall();
         }
         if (_onBehalf == address(0)) revert AddressIsZero();

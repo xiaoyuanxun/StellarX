@@ -80,14 +80,46 @@ interface IMorpho {
 
     /// USERS ///
 
-    function supply(address _poolToken, uint256 _amount) external;
-    function supply(address _poolToken, address _onBehalf, uint256 _amount) external;
-    function supply(address _poolToken, address _onBehalf, uint256 _amount, uint256 _maxGasForMatching) external;
-    function borrow(address _poolToken, uint256 _amount) external;
-    function borrow(address _poolToken, uint256 _amount, uint256 _maxGasForMatching) external;
-    function withdraw(address _poolToken, uint256 _amount) external;
-    function withdraw(address _poolToken, uint256 _amount, address _receiver) external;
-    function repay(address _poolToken, uint256 _amount) external;
-    function repay(address _poolToken, address _onBehalf, uint256 _amount) external;
-    function liquidate(address _poolTokenBorrowed, address _poolTokenCollateral, address _borrower, uint256 _amount) external;
+    /*function supply(
+        address _poolToken,
+        address _onBehalf,
+        uint256 _amount,
+        uint32 _dstChainID
+    ) external ;*/
+    function supply(
+        address _poolToken,
+        address _onBehalf,
+        uint256 _amount,
+        uint256 _maxGasForMatching,
+        uint32 _dstChainID
+    ) external ;
+     function borrow(
+        address _poolToken,
+        uint256 _amount,
+        uint256 _maxGasForMatching,
+        address _onBehalf,
+        uint256 _dstChainID
+    ) external ;
+      function withdraw(
+        address _poolToken,
+        uint256 _amount,
+        address _onBehalf,
+        address _receiver,
+        uint32 _dstChainID
+    ) external;
+    function repay(
+        address _poolToken,
+        address _onBehalf,
+        uint256 _amount,
+        uint32 _dstChainID
+    ) external;
+    function liquidate(
+        address _poolTokenBorrowed,
+        address _poolTokenCollateral,
+        address _liquidator,
+        address _borrower,
+        uint256 _amount,
+        uint256 _dstChainID
+    ) external;
+    
 }

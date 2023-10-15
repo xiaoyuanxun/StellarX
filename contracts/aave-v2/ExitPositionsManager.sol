@@ -146,16 +146,16 @@ contract ExitPositionsManager is PositionsManagerUtils {
         uint256 _amount,
         address _supplier,
         address _receiver,
-        uint256 _maxGasForMatching,
-        uint32 _excuteChainID
-        ) external ensureChainID(_excuteChainID) {
-        if(_excuteChainID!=CURRENT_CHAINID){
+        uint256 _maxGasForMatching
+        //uint32 _excuteChainID
+        ) external  {
+        /*if(_excuteChainID!=CURRENT_CHAINID){
             //执行跨链调用call 
             //crossCall(); 
 
         }
         
-        if (_amount == 0) revert AmountIsZero();
+        if (_amount == 0) revert AmountIsZero();*/
         if (_receiver == address(0)) revert AddressIsZero();
         if (!market[_poolToken].isCreated) revert MarketNotCreated();
         if (marketPauseStatus[_poolToken].isWithdrawPaused) revert WithdrawIsPaused();
@@ -180,14 +180,14 @@ contract ExitPositionsManager is PositionsManagerUtils {
         address _repayer,
         address _onBehalf,
         uint256 _amount,
-        uint256 _maxGasForMatching,
-        uint32 _excuteChainID
-    ) external ensureChainID(_excuteChainID) {
-        if(_excuteChainID != CURRENT_CHAINID){
+        uint256 _maxGasForMatching
+        //uint32 _excuteChainID
+    ) external {
+        /*if(_excuteChainID != CURRENT_CHAINID){
             //safetransferFrom asset,cross it
             //crossCall();
         }
-        if (_amount == 0) revert AmountIsZero();
+        if (_amount == 0) revert AmountIsZero();*/
         if (!market[_poolToken].isCreated) revert MarketNotCreated();
         if (marketPauseStatus[_poolToken].isRepayPaused) revert RepayIsPaused();
 
@@ -206,16 +206,15 @@ contract ExitPositionsManager is PositionsManagerUtils {
     function liquidateLogic(
         address _poolTokenBorrowed,
         address _poolTokenCollateral,
-        address _liquidator,
+        address _liquidator
         address _borrower,
-        uint256 _amount,
-        uint32 _excuteChainID //在那条链上调用
-    ) external ensureChainID(_excuteChainID) {
-        if (_amount == 0) revert AmountIsZero();
+        uint256 _amount
+    ) external  {
+        /*if (_amount == 0) revert AmountIsZero();
         if(_excuteChainID!=CURRENT_CHAINID){
             //transferFrom asset,cross it
             //crossCall();
-        }
+        }*/
         Types.Market memory collateralMarket = market[_poolTokenCollateral];
         if (!collateralMarket.isCreated) revert MarketNotCreated();
         if (marketPauseStatus[_poolTokenCollateral].isLiquidateCollateralPaused)
@@ -283,7 +282,7 @@ contract ExitPositionsManager is PositionsManagerUtils {
         }
 
         _unsafeRepayLogic(_poolTokenBorrowed, msg.sender, _borrower, vars.amountToLiquidate, 0);
-        _unsafeWithdrawLogic(_poolTokenCollateral, vars.amountToSeize, _borrower, msg.sender, 0);
+        _unsafeWithdrawLogic(_poolTokenCollateral, vars.amountToSeize, _borrower, _liquidator, 0);
 
     // event Liquidated(
     //     address _liquidator,
@@ -313,10 +312,10 @@ contract ExitPositionsManager is PositionsManagerUtils {
         external
         isMarketCreated(_poolToken) 
     {   
-        if (_excuteChainID!=CURRENT_CHAINID){
+       /* if (_excuteChainID!=CURRENT_CHAINID){
             //CrossCall();
         }
-        
+        */
         _updateIndexes(_poolToken);
 
         Types.Delta storage deltas = deltas[_poolToken];
