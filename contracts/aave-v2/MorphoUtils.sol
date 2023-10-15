@@ -50,11 +50,13 @@ abstract contract MorphoUtils is MorphoStorage {
         if (!market[_poolToken].isCreated) revert MarketNotCreated();
         _;
     }
-    modifier ensureChainID(uint32 _chainID){
+    modifier ensureChainID(uint32 _chainID) {
         require(supportChain[_chainID],"invalid ChainID or not suppoet it!"); //无效的chainID；
+        _;
     }
     modifier verifyCaller(address _supplier){
         require(msg.sender==_supplier||msg.sender==relyer,"not allowed!");
+        _;
     }
 
     /// EXTERNAL ///

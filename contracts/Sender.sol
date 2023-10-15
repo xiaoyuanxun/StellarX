@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity 0.8.13;
 
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol";
@@ -12,13 +12,16 @@ contract Sender is Withdraw {
     address immutable i_link;
     uint16  immutable i_maxTokensLength;
 
-    struct RateMessageData {
-        uint256 blockNumber;
-        uint256 supplyRate;
-        uint256 borrowRate;
+    struct MessageData {
+        address user;
+        bytes callData;        
+        address destinationExacuteContract;
+        uint chainId;
     }
 
     event MessageSent(bytes32 messageId);
+
+    mapping(uint32 => uint64) chainIdToSelector;
 
     constructor(address router, address link) {
         i_router = router;
@@ -29,13 +32,11 @@ contract Sender is Withdraw {
 
     receive() external payable {}
 
-    // 跨链利率传输
-    function sendRateMessage(
+    function sendMessage(
         uint64 destinationChainSelector, 
         address receiver,
-        RateMessageData memory messageData
+        MessageData memory messageData
     ) external {
-        // 序列化消息
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver),
             data: abi.encode(messageData),
@@ -45,7 +46,6 @@ contract Sender is Withdraw {
         });
 
         bytes32 messageId;
-
         messageId = IRouterClient(i_router).ccipSend(
             destinationChainSelector,
             message
@@ -54,23 +54,52 @@ contract Sender is Withdraw {
         emit MessageSent(messageId);
     }
 
-    // 跨链消息传输
-    function sendMessage(
-        uint64 destinationChainSelector, 
+    function getChainSelector(uint32 chainID) internal returns(uint64) {
+        return chainIdToSelector[chainID];
+    }
+
+    function initChainIdToSelector(uint32 chainID, uint64 chainSelector) public onlyOwner {
+        chainIdToSelector[chainID] = chainSelector;
+    }
+
+    function sendMessageAndToken(
+        uint32 chainID,
         address receiver,
-        string memory messageText
+        MessageData memory messageData,
+        Client.EVMTokenAmount[] memory tokensToSendDetails
     ) external {
-        // 序列化消息
+        uint64 destinationChainSelector = getChainSelector(chainID);
+        uint256 length = tokensToSendDetails.length;
+        require(
+            length <= i_maxTokensLength,
+            "Maximum 5 different tokens can be sent per CCIP Message"
+        );
+
+        for (uint256 i = 0; i < length; ) {
+            IERC20(tokensToSendDetails[i].token).transferFrom(
+                msg.sender,
+                address(this),
+                tokensToSendDetails[i].amount
+            );
+            IERC20(tokensToSendDetails[i].token).approve(
+                i_router,
+                tokensToSendDetails[i].amount
+            );
+
+            unchecked {
+                ++i;
+            }
+        }
+
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver),
-            data: abi.encode(messageText),
-            tokenAmounts: new Client.EVMTokenAmount[](0),
+            data: abi.encode(messageData),
+            tokenAmounts: tokensToSendDetails,
             extraArgs: "",
             feeToken: i_link
         });
-
+        
         bytes32 messageId;
-
         messageId = IRouterClient(i_router).ccipSend(
             destinationChainSelector,
             message

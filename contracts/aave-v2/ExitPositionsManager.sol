@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.13;
 
-import "./interfaces/IExitPositionsManager.sol";
+// import "./interfaces/IExitPositionsManager.sol";
 
 import "./PositionsManagerUtils.sol";
 
-/// @title ExitPositionsManager.
-/// @author Morpho Labs.
-/// @custom:contact security@morpho.xyz
-/// @notice Morpho's exit points: withdraw, repay and liquidate.
-contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
+// contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
+contract ExitPositionsManager is PositionsManagerUtils {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using HeapOrdering for HeapOrdering.HeapArray;
     using PercentageMath for uint256;
@@ -150,7 +147,7 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
         address _supplier,
         address _receiver,
         uint256 _maxGasForMatching,
-        uint256 _excuteChainID
+        uint32 _excuteChainID
         ) external ensureChainID(_excuteChainID) {
         if(_excuteChainID!=CURRENT_CHAINID){
             //执行跨链调用call 
@@ -184,7 +181,7 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
         address _onBehalf,
         uint256 _amount,
         uint256 _maxGasForMatching,
-        uint256 _excuteChainID
+        uint32 _excuteChainID
     ) external ensureChainID(_excuteChainID) {
         if(_excuteChainID != CURRENT_CHAINID){
             //safetransferFrom asset,cross it
@@ -212,7 +209,7 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
         address _liquidator,
         address _borrower,
         uint256 _amount,
-        uint256 _excuteChainID //在那条链上调用
+        uint32 _excuteChainID //在那条链上调用
     ) external ensureChainID(_excuteChainID) {
         if (_amount == 0) revert AmountIsZero();
         if(_excuteChainID!=CURRENT_CHAINID){
@@ -287,6 +284,15 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
 
         _unsafeRepayLogic(_poolTokenBorrowed, msg.sender, _borrower, vars.amountToLiquidate, 0);
         _unsafeWithdrawLogic(_poolTokenCollateral, vars.amountToSeize, _borrower, msg.sender, 0);
+
+    // event Liquidated(
+    //     address _liquidator,
+    //     address indexed _liquidated,
+    //     address indexed _poolTokenBorrowed,
+    //     uint256 _amountRepaid,
+    //     address indexed _poolTokenCollateral,
+    //     uint256 _amountSeized
+    // );
 
         emit Liquidated(
             _liquidator,

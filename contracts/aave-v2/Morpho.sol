@@ -1,12 +1,8 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
 import "./MorphoGovernance.sol";
 
-/// @title Morpho.
-/// @author Morpho Labs.
-/// @custom:contact security@morpho.xyz
-/// @notice Main Morpho contract handling user interactions and pool interactions.
 contract Morpho is MorphoGovernance {
     using SafeTransferLib for ERC20;
     using DelegateCall for address;
@@ -18,7 +14,7 @@ contract Morpho is MorphoGovernance {
     /// @dev `msg.sender` must have approved Morpho's contract to spend the underlying `_amount`.
     /// @param _poolToken The address of the market the user wants to interact with.
     /// @param _amount The amount of token (in underlying) to supply.
-    function supply(address _poolToken, uint256 _amount,uint256 _dstChainID ) external nonReentrant  {
+    function supply(address _poolToken, uint256 _amount,uint32 _dstChainID ) external nonReentrant  {
         _supply(_poolToken, msg.sender, _amount, defaultMaxGasForMatching.supply,_dstChainID);
     }
 
@@ -31,7 +27,7 @@ contract Morpho is MorphoGovernance {
         address _poolToken,
         address _onBehalf,
         uint256 _amount,
-        uint256 _dstChainID
+        uint32 _dstChainID
     ) external nonReentrant{
         _supply(_poolToken, _onBehalf, _amount, defaultMaxGasForMatching.supply,_dstChainID);
     }
@@ -48,9 +44,9 @@ contract Morpho is MorphoGovernance {
         address _onBehalf,
         uint256 _amount,
         uint256 _maxGasForMatching,
-        uint256 _dstChainID
+        uint32 _dstChainID
     ) external nonReentrant {
-        _supply(_poolToken, _onBehalf, _amount, _maxGasForMatchin,_dstChainID);
+        _supply(_poolToken, _onBehalf, _amount, _maxGasForMatching,_dstChainID);
     }
 
     /// @notice Borrows underlying tokens from a specific market.
@@ -77,7 +73,7 @@ contract Morpho is MorphoGovernance {
     /// @notice Withdraws underlying tokens from a specific market.
     /// @param _poolToken The address of the market the user wants to interact with.
     /// @param _amount The amount of tokens (in underlying) to withdraw from supply.
-    function withdraw(address _poolToken, uint256 _amount,uint256 _dstChainID) external nonReentrant {
+    function withdraw(address _poolToken, uint256 _amount,uint32 _dstChainID) external nonReentrant {
         _withdraw(_poolToken, _amount, msg.sender,msg.sender, defaultMaxGasForMatching.withdraw,_dstChainID);
     }
 
@@ -90,7 +86,7 @@ contract Morpho is MorphoGovernance {
         uint256 _amount,
         address _onBehalf,
         address _receiver,
-        uint256 _dstChainID
+        uint32 _dstChainID
     ) external nonReentrant  verifyCaller(_onBehalf) {
         _withdraw(_poolToken, _amount,_onBehalf, _receiver, defaultMaxGasForMatching.withdraw,_dstChainID);
     }
@@ -100,7 +96,7 @@ contract Morpho is MorphoGovernance {
     /// @dev `msg.sender` must have approved Morpho's contract to spend the underlying `_amount`.
     /// @param _poolToken The address of the market the user wants to interact with.
     /// @param _amount The amount of token (in underlying) to repay from borrow.
-    function repay(address _poolToken, uint256 _amount,uint256 _dstChainID) external nonReentrant {
+    function repay(address _poolToken, uint256 _amount,uint32 _dstChainID) external nonReentrant {
         _repay(_poolToken, msg.sender, _amount, defaultMaxGasForMatching.repay,_dstChainID);
     }
 
@@ -113,7 +109,7 @@ contract Morpho is MorphoGovernance {
         address _poolToken,
         address _onBehalf,
         uint256 _amount,
-        uint256 _dstChainID
+        uint32 _dstChainID
     ) external nonReentrant {
         _repay(_poolToken, _onBehalf, _amount, defaultMaxGasForMatching.repay,_dstChainID);
     }
@@ -126,7 +122,7 @@ contract Morpho is MorphoGovernance {
     function liquidate(
         address _poolTokenBorrowed,
         address _poolTokenCollateral,
-        address _liquidator
+        address _liquidator,
         address _borrower,
         uint256 _amount,
         uint256 _dstChainID
@@ -149,7 +145,8 @@ contract Morpho is MorphoGovernance {
         address _poolToken,
         address _onBehalf,
         uint256 _amount,
-        uint256 _maxGasForMatching
+        uint256 _maxGasForMatching,
+        uint32 _dstChainID
     ) internal {
         address(entryPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
@@ -167,8 +164,8 @@ contract Morpho is MorphoGovernance {
     function _borrow(
         address _poolToken,
         uint256 _amount,
-        address  _borrower
-        uint256 _maxGasForMatching
+        address  _borrower,
+        uint256 _maxGasForMatching,
         uint256 _dstChainID
     ) internal {
         address(entryPositionsManager).functionDelegateCall(
@@ -176,9 +173,9 @@ contract Morpho is MorphoGovernance {
                 IEntryPositionsManager.borrowLogic.selector,
                 _poolToken,
                 _amount,
-                _borrower
-                _maxGasForMatching
-                _dstChaID
+                _borrower,
+                _maxGasForMatching,
+                _dstChainID
             )
         );
     }
@@ -186,10 +183,10 @@ contract Morpho is MorphoGovernance {
     function _withdraw(
         address _poolToken,
         uint256 _amount,
-        uint256 _supplier,
+        address _supplier,
         address _receiver,
-        uint256 _maxGasForMatching
-        uint32 _dstChaID
+        uint256 _maxGasForMatching,
+        uint32 _dstChainID
     ) internal {
         address(exitPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
@@ -198,7 +195,7 @@ contract Morpho is MorphoGovernance {
                 _amount,
                 _supplier,
                 _receiver,
-                _maxGasForMatching
+                _maxGasForMatching,
                 _dstChainID
             )
         );
@@ -208,7 +205,8 @@ contract Morpho is MorphoGovernance {
         address _poolToken,
         address _onBehalf,
         uint256 _amount,
-        uint256 _maxGasForMatching
+        uint256 _maxGasForMatching,
+        uint32 _dstChaID
     ) internal {
         address(exitPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(

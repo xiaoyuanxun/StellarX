@@ -1,12 +1,9 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
 import "./MarketsLens.sol";
 
-/// @title Lens.
-/// @author Morpho Labs.
-/// @custom:contact security@morpho.xyz
-/// @notice This contract exposes an API to query on-chain data related to the Morpho Protocol, its markets and its users.
+// 此合约用来查询数据
 contract Lens is MarketsLens {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using WadRayMath for uint256;

@@ -1,15 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
-
-import "./interfaces/IEntryPositionsManager.sol";
-
+// import "./interfaces/IEntryPositionsManager.sol";
 import "./PositionsManagerUtils.sol";
 
-/// @title EntryPositionsManager.
-/// @author Morpho Labs.
-/// @custom:contact security@morpho.xyz
-/// @notice Morpho's entry points: supply and borrow.
-contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils {
+// contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils {
+contract EntryPositionsManager is PositionsManagerUtils {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using HeapOrdering for HeapOrdering.HeapArray;
     using PercentageMath for uint256;
@@ -17,15 +12,6 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
     using WadRayMath for uint256;
     using Math for uint256;
 
-    /// EVENTS ///
-
-    /// @notice Emitted when a supply happens.
-    /// @param _from The address of the account sending funds.
-    /// @param _onBehalf The address of the account whose positions will be updated.
-    /// @param _poolToken The address of the market where assets are supplied into.
-    /// @param _amount The amount of assets supplied (in underlying).
-    /// @param _balanceOnPool The supply balance on pool after update.
-    /// @param _balanceInP2P The supply balance in peer-to-peer after update.
     event Supplied(
         address indexed _from,
         address indexed _onBehalf,
@@ -35,12 +21,6 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
         uint256 _balanceInP2P
     );
 
-    /// @notice Emitted when a borrow happens.
-    /// @param _borrower The address of the borrower.
-    /// @param _poolToken The address of the market where assets are borrowed.
-    /// @param _amount The amount of assets borrowed (in underlying).
-    /// @param _balanceOnPool The borrow balance on pool after update.
-    /// @param _balanceInP2P The borrow balance in peer-to-peer after update
     event Borrowed(
         address indexed _borrower,
         address indexed _poolToken,
@@ -49,52 +29,46 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
         uint256 _balanceInP2P
     );
 
-    /// ERRORS ///
-
-    /// @notice Thrown when borrowing is impossible, because it is not enabled on pool for this specific market.
     error BorrowingNotEnabled();
 
-    /// @notice Thrown when the user does not have enough collateral for the borrow.
     error UnauthorisedBorrow();
 
-    /// @notice Thrown when someone tries to supply but the supply is paused.
     error SupplyIsPaused();
 
-    /// @notice Thrown when someone tries to borrow but the borrow is paused.
     error BorrowIsPaused();
 
-    /// STRUCTS ///
-
-    // Struct to avoid stack too deep.
     struct SupplyVars {
         uint256 remainingToSupply;
         uint256 poolBorrowIndex;
         uint256 toRepay;
     }
 
+    // uint256 CURRENT_CHAINID;
+    address SENDER_ADDRESS;
+
+    constructor(uint32 chainID, address senderContract) {
+        // CURRENT_CHAINID = chainID;
+        SENDER_ADDRESS = senderContract;
+    }
+
     /// LOGIC ///
 
-    /// @dev Implements supply logic.
-    /// @param _poolToken The address of the pool token the user wants to interact with.
-    /// @param _from The address of the account sending funds.
-    /// @param _onBehalf The address of the account whose positions will be updated.
-    /// @param _amount The amount of token (in underlying).
-    /// @param _maxGasForMatching The maximum amount of gas to consume within a matching engine loop.
     function supplyLogic(
         address _poolToken,
-        address _from,
+        address _repayer,
         address _onBehalf,
         uint256 _amount,
         uint256 _maxGasForMatching,
-        uint256 _excuteChainID
+        uint32 _excuteChainID
     ) external ensureChainID(_excuteChainID) {
         ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
-        if(_chainID!=CURRENT_CHAINID){
+        if(_excuteChainID!=CURRENT_CHAINID){
             //执行跨链调用supply;
             //发送代币，执行交易
             //safetransferFrom(),cross it;
-            
-            underlyingToken.safeTransferFrom(_caller, address(this), _amount);
+            ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
+            underlyingToken.safeTransferFrom(_repayer, address(this), _amount);
+
             //send message and token to crosschain;
             //crossCall();
         }
@@ -109,7 +83,7 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
         _updateIndexes(_poolToken);
         _setSupplying(_onBehalf, borrowMask[_poolToken], true);
 
-        underlyingToken.safeTransferFrom(_from, address(this), _amount);
+        underlyingToken.safeTransferFrom(_repayer, address(this), _amount);
 
         Types.Delta storage delta = deltas[_poolToken];
         SupplyVars memory vars;
@@ -177,7 +151,7 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
         _updateSupplierInDS(_poolToken, _onBehalf);
 
         emit Supplied(
-            _from,
+            _repayer,
             _onBehalf,
             _poolToken,
             _amount,
@@ -192,11 +166,11 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
     /// @param _maxGasForMatching The maximum amount of gas to consume within a matching engine loop.
     ////增加功能：如果需要在其它链借出资产，则传入chain ID ,编码消息并且发送至跨链桥。
     function borrowLogic(
-        address _onBehalf
+        address _onBehalf,
         address _poolToken,
         uint256 _amount,
         uint256 _maxGasForMatching,
-        uint256 _excuteChainID
+        uint32 _excuteChainID
         ) external  ensureChainID(_excuteChainID) {
             //如果想要在其它链上借出资产，则将借出消息发送到目标链上。在目标链上得到资产。
         if(_excuteChainID!=CURRENT_CHAINID){
