@@ -18,10 +18,6 @@ contract Receiver is CCIPReceiver, Withdraw {
         uint chainId;
     }
     
-    struct EVMTokenAmount {
-        address token; // token address on the local chain.
-        uint256 amount; // Amount of tokens.
-    }
 
     // mapping(bytes32 => RateData) public rateData;
     // mapping(uint64 => RateData[]) public chainRateData;
@@ -31,7 +27,7 @@ contract Receiver is CCIPReceiver, Withdraw {
         uint64 sourceChainSelector;
         address sender;
         MessageData message;
-        EVMTokenAmount token;
+        Client.EVMTokenAmount token;
     }
     
     event MessageReceived(
@@ -39,7 +35,7 @@ contract Receiver is CCIPReceiver, Withdraw {
         uint64 latestSourceChainSelector,
         address latestSender,
         MessageData latestMessage,
-        EVMTokenAmount token
+        Client.EVMTokenAmount token
     );
 
     constructor(address router) CCIPReceiver(router) {}
@@ -63,27 +59,27 @@ contract Receiver is CCIPReceiver, Withdraw {
 
         // 跨链接收消息后的执行逻辑
 
-        // emit MessageReceived(
-        //     latestMessageId,
-        //     latestSourceChainSelector,
-        //     latestSender,
-        //     latestMessage,
-        //     message.destTokenAmounts[0]
-        // );
+        emit MessageReceived(
+            latestMessageId,
+            latestSourceChainSelector,
+            latestSender,
+            latestMessage,
+            message.destTokenAmounts[0]
+        );
     }
 
-    // function getLatestMessageDetails()
-    //     public
-    //     view
-    //     returns (bytes32, uint64, address, RateMessageData memory)
-    // {
-    //     return (
-    //         latestMessageId,
-    //         latestSourceChainSelector,
-    //         latestSender,
-    //         latestMessage
-    //     );
-    // }
+    function getLatestMessageDetails()
+        public
+        view
+        returns (bytes32, uint64, address, MessageData memory)
+    {
+        return (
+            latestMessageId,
+            latestSourceChainSelector,
+            latestSender,
+            latestMessage
+        );
+    }
 
     // function getChainRateData(
     //     uint64 chainSelector,

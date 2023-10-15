@@ -62,6 +62,10 @@ contract Sender is Withdraw {
         chainIdToSelector[chainID] = chainSelector;
     }
 
+    // struct EVMTokenAmount {
+    //     address token; // token address on the local chain.
+    //     uint256 amount; // Amount of tokens.
+    // }
     function sendMessageAndToken(
         uint32 chainID,
         address receiver,
