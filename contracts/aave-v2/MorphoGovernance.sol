@@ -174,6 +174,10 @@ abstract contract MorphoGovernance is MorphoUtils {
     function setChainIDState(uint32 _chainID,bool _value) public onlyOwner{
         supportChain[_chainID]=_value;
     }
+    //设置中继器
+    function  setRelyer(address _relyer) external onlyOwner {
+        relyer = _relyer;
+    }
     /// @notice Sets `defaultMaxGasForMatching`.
     /// @param _defaultMaxGasForMatching The new `defaultMaxGasForMatching`.
     function setDefaultMaxGasForMatching(Types.MaxGasForMatching memory _defaultMaxGasForMatching)

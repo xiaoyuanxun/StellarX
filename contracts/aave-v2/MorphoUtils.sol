@@ -50,6 +50,12 @@ abstract contract MorphoUtils is MorphoStorage {
         if (!market[_poolToken].isCreated) revert MarketNotCreated();
         _;
     }
+    modifier ensureChainID(uint32 _chainID){
+        require(supportChain[_chainID],"invalid ChainID or not suppoet it!"); //无效的chainID；
+    }
+    modifier verifyCaller(address _supplier){
+        require(msg.sender==_supplier||msg.sender==relyer,"not allowed!");
+    }
 
     /// EXTERNAL ///
 
@@ -58,6 +64,7 @@ abstract contract MorphoUtils is MorphoStorage {
     function getMarketsCreated() external view returns (address[] memory) {
         return marketsCreated;
     }
+    
 
     /// @notice Gets the head of the data structure on a specific market (for UI).
     /// @param _poolToken The address of the market from which to get the head.

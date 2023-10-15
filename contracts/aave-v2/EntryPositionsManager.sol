@@ -86,14 +86,15 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
         address _onBehalf,
         uint256 _amount,
         uint256 _maxGasForMatching,
-        uint256 _chainID
-    ) external {
+        uint256 _excuteChainID
+    ) external ensureChainID(_excuteChainID) {
+        ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
         if(_chainID!=CURRENT_CHAINID){
             //执行跨链调用supply;
             //发送代币，执行交易
             //safetransferFrom(),cross it;
-            ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
-            underlyingToken.safeTransferFrom(_repayer, address(this), _amount);
+            
+            underlyingToken.safeTransferFrom(_caller, address(this), _amount);
             //send message and token to crosschain;
             //crossCall();
         }
@@ -191,11 +192,12 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
     /// @param _maxGasForMatching The maximum amount of gas to consume within a matching engine loop.
     ////增加功能：如果需要在其它链借出资产，则传入chain ID ,编码消息并且发送至跨链桥。
     function borrowLogic(
+        address _onBehalf
         address _poolToken,
         uint256 _amount,
         uint256 _maxGasForMatching,
         uint256 _excuteChainID
-        ) external ensureChainID(_excuteChainID) {
+        ) external  ensureChainID(_excuteChainID) {
             //如果想要在其它链上借出资产，则将借出消息发送到目标链上。在目标链上得到资产。
         if(_excuteChainID!=CURRENT_CHAINID){
             //直接跨链调用借贷;
@@ -212,9 +214,9 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
             revert BorrowingNotEnabled();
 
         _updateIndexes(_poolToken);
-        _setBorrowing(msg.sender, borrowMask[_poolToken], true);
+        _setBorrowing(_onBehalf, borrowMask[_poolToken], true);
 
-        if (!_borrowAllowed(msg.sender, _poolToken, _amount)) revert UnauthorisedBorrow();
+        if (!_borrowAllowed(_onBehalf, _poolToken, _amount)) revert UnauthorisedBorrow();
 
         uint256 remainingToBorrow = _amount;
         uint256 toWithdraw;
@@ -256,7 +258,7 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
         }
 
         Types.BorrowBalance storage borrowerBorrowBalance = borrowBalanceInOf[_poolToken][
-            msg.sender
+            _onBehalf
         ];
 
         if (toWithdraw > 0) {
@@ -279,11 +281,11 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
             _borrowFromPool(underlyingToken, remainingToBorrow);
         }
 
-        _updateBorrowerInDS(_poolToken, msg.sender);
-        underlyingToken.safeTransfer(msg.sender, _amount);
+        _updateBorrowerInDS(_poolToken, _onBehalf);
+        underlyingToken.safeTransfer(_onBehalf, _amount);
 
         emit Borrowed(
-            msg.sender,
+            _onBehalf,
             _poolToken,
             _amount,
             borrowerBorrowBalance.onPool,
