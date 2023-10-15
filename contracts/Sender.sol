@@ -7,10 +7,16 @@ import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.s
 import {Withdraw} from "./utils/Withdraw.sol";
 import {IERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/token/ERC20/IERC20.sol";
 
-contract BasicMessageSender is Withdraw {
+contract Sender is Withdraw {
     address immutable i_router;
     address immutable i_link;
     uint16  immutable i_maxTokensLength;
+
+    struct RateMessageData {
+        uint256 blockNumber;
+        uint256 supplyRate;
+        uint256 borrowRate;
+    }
 
     event MessageSent(bytes32 messageId);
 
@@ -22,6 +28,31 @@ contract BasicMessageSender is Withdraw {
     }
 
     receive() external payable {}
+
+    // 跨链利率传输
+    function sendRateMessage(
+        uint64 destinationChainSelector, 
+        address receiver,
+        RateMessageData memory messageData
+    ) external {
+        // 序列化消息
+        Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
+            receiver: abi.encode(receiver),
+            data: abi.encode(messageData),
+            tokenAmounts: new Client.EVMTokenAmount[](0),
+            extraArgs: "",
+            feeToken: i_link
+        });
+
+        bytes32 messageId;
+
+        messageId = IRouterClient(i_router).ccipSend(
+            destinationChainSelector,
+            message
+        );
+
+        emit MessageSent(messageId);
+    }
 
     // 跨链消息传输
     function sendMessage(
