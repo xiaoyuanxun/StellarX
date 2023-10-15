@@ -151,10 +151,11 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
         address _receiver,
         uint256 _maxGasForMatching,
         uint256 _excuteChainID
-        ) external {
+        ) external ensureChainID(_excuteChainID) {
         if(_excuteChainID!=CURRENT_CHAINID){
             //执行跨链调用call 
             //crossCall(); 
+
         }
         
         if (_amount == 0) revert AmountIsZero();
@@ -183,9 +184,9 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
         address _onBehalf,
         uint256 _amount,
         uint256 _maxGasForMatching,
-        uint256 _calldstChainID
-    ) external {
-        if(_dstChaID != CURRENT_CHAINID){
+        uint256 _excuteChainID
+    ) external ensureChainID(_excuteChainID) {
+        if(_excuteChainID != CURRENT_CHAINID){
             //safetransferFrom asset,cross it
             //crossCall();
         }
@@ -208,12 +209,13 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
     function liquidateLogic(
         address _poolTokenBorrowed,
         address _poolTokenCollateral,
+        address _liquidator,
         address _borrower,
         uint256 _amount,
-        uint256 _dstChaID //在那条链上调用
-    ) external {
+        uint256 _excuteChainID //在那条链上调用
+    ) external ensureChainID(_excuteChainID) {
         if (_amount == 0) revert AmountIsZero();
-        if(_dstChaID!=CURRENT_CHAINID){
+        if(_excuteChainID!=CURRENT_CHAINID){
             //transferFrom asset,cross it
             //crossCall();
         }
@@ -287,7 +289,7 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
         _unsafeWithdrawLogic(_poolTokenCollateral, vars.amountToSeize, _borrower, msg.sender, 0);
 
         emit Liquidated(
-            msg.sender,
+            _liquidator,
             _borrower,
             _poolTokenBorrowed,
             vars.amountToLiquidate,
@@ -303,7 +305,7 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
     /// @param _amount The maximum amount to add to the deltas (in underlying).
     function increaseP2PDeltasLogic(address _poolToken, uint256 _amount,uint256 _excuteChainID)
         external
-        isMarketCreated(_poolToken)
+        isMarketCreated(_poolToken) 
     {   
         if (_excuteChainID!=CURRENT_CHAINID){
             //CrossCall();

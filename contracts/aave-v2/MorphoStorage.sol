@@ -18,7 +18,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 /// @notice All storage variables used in Morpho contracts.
 abstract contract MorphoStorage is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /// GLOBAL STORAGE ///
-
+    uint32 public constant CURRENT_CHAINID =80;
+    mapping (uint32 => bool) public supportChain;
+    address public relyer; //跨链桥中继器
+    ////
     uint8 public constant NO_REFERRAL_CODE = 0;
     uint8 public constant VARIABLE_INTEREST_MODE = 2;
     uint16 public constant MAX_BASIS_POINTS = 100_00; // 100% in basis points.

@@ -18,7 +18,7 @@ contract Morpho is MorphoGovernance {
     /// @dev `msg.sender` must have approved Morpho's contract to spend the underlying `_amount`.
     /// @param _poolToken The address of the market the user wants to interact with.
     /// @param _amount The amount of token (in underlying) to supply.
-    function supply(address _poolToken, uint256 _amount,uint256 _dstChainID ) external nonReentrant ensureChainID(_dstChainID) {
+    function supply(address _poolToken, uint256 _amount,uint256 _dstChainID ) external nonReentrant  {
         _supply(_poolToken, msg.sender, _amount, defaultMaxGasForMatching.supply,_dstChainID);
     }
 
@@ -32,7 +32,7 @@ contract Morpho is MorphoGovernance {
         address _onBehalf,
         uint256 _amount,
         uint256 _dstChainID
-    ) external nonReentrant ensureChainID(_dstChainID){
+    ) external nonReentrant{
         _supply(_poolToken, _onBehalf, _amount, defaultMaxGasForMatching.supply,_dstChainID);
     }
 
@@ -49,15 +49,15 @@ contract Morpho is MorphoGovernance {
         uint256 _amount,
         uint256 _maxGasForMatching,
         uint256 _dstChainID
-    ) external nonReentrant ensureChainID(_dstChainID){
+    ) external nonReentrant {
         _supply(_poolToken, _onBehalf, _amount, _maxGasForMatchin,_dstChainID);
     }
 
     /// @notice Borrows underlying tokens from a specific market.
     /// @param _poolToken The address of the market the user wants to interact with.
     /// @param _amount The amount of token (in underlying).
-    function borrow(address _poolToken, uint256 _amount,uint256 _dstChainID) external nonReentrant ensureChainID(_dstChainID){
-        _borrow(_poolToken, _amount, defaultMaxGasForMatching.borrow,_dstChainID);
+    function borrow(address _poolToken, uint256 _amount,uint256 _dstChainID) external nonReentrant {
+        _borrow(_poolToken, _amount,msg.sender, defaultMaxGasForMatching.borrow,_dstChainID);
     }
 
     /// @notice Borrows underlying tokens from a specific market, specifying a gas threshold at which to stop the matching engine.
@@ -68,16 +68,17 @@ contract Morpho is MorphoGovernance {
         address _poolToken,
         uint256 _amount,
         uint256 _maxGasForMatching,
+        address _onBehalf,
         uint256 _dstChainID
-    ) external nonReentrant ensureChainID(_dstChainID) {
-        _borrow(_poolToken, _amount, _maxGasForMatching,_dstChainID);
+    ) external nonReentrant verifyCaller(_onBehalf){
+        _borrow(_poolToken, _amount,_onBehalf, _maxGasForMatching,_dstChainID);
     }
-
+    //borrow3 ,用于代表别人借贷
     /// @notice Withdraws underlying tokens from a specific market.
     /// @param _poolToken The address of the market the user wants to interact with.
     /// @param _amount The amount of tokens (in underlying) to withdraw from supply.
-    function withdraw(address _poolToken, uint256 _amount,uint256 _dstChainID) external nonReentrant ensureChainID(_dstChainID){
-        _withdraw(_poolToken, _amount, msg.sender, defaultMaxGasForMatching.withdraw,_dstChainID);
+    function withdraw(address _poolToken, uint256 _amount,uint256 _dstChainID) external nonReentrant {
+        _withdraw(_poolToken, _amount, msg.sender,msg.sender, defaultMaxGasForMatching.withdraw,_dstChainID);
     }
 
     /// @notice Withdraws underlying tokens from a specific market.
@@ -87,17 +88,19 @@ contract Morpho is MorphoGovernance {
     function withdraw(
         address _poolToken,
         uint256 _amount,
+        address _onBehalf,
         address _receiver,
         uint256 _dstChainID
-    ) external nonReentrant ensureChainID(_dstChainID){
-        _withdraw(_poolToken, _amount, _receiver, defaultMaxGasForMatching.withdraw,_dstChainID);
+    ) external nonReentrant  verifyCaller(_onBehalf) {
+        _withdraw(_poolToken, _amount,_onBehalf, _receiver, defaultMaxGasForMatching.withdraw,_dstChainID);
     }
+    
 
     /// @notice Repays the debt of the sender, up to the amount provided.
     /// @dev `msg.sender` must have approved Morpho's contract to spend the underlying `_amount`.
     /// @param _poolToken The address of the market the user wants to interact with.
     /// @param _amount The amount of token (in underlying) to repay from borrow.
-    function repay(address _poolToken, uint256 _amount,uint256 _dstChainID) external nonReentrant ensureChainID(_dstChainID){
+    function repay(address _poolToken, uint256 _amount,uint256 _dstChainID) external nonReentrant {
         _repay(_poolToken, msg.sender, _amount, defaultMaxGasForMatching.repay,_dstChainID);
     }
 
@@ -111,7 +114,7 @@ contract Morpho is MorphoGovernance {
         address _onBehalf,
         uint256 _amount,
         uint256 _dstChainID
-    ) external nonReentrant ensureChainID(_dstChainID){
+    ) external nonReentrant {
         _repay(_poolToken, _onBehalf, _amount, defaultMaxGasForMatching.repay,_dstChainID);
     }
 
@@ -123,25 +126,23 @@ contract Morpho is MorphoGovernance {
     function liquidate(
         address _poolTokenBorrowed,
         address _poolTokenCollateral,
+        address _liquidator
         address _borrower,
         uint256 _amount,
         uint256 _dstChainID
-    ) external nonReentrant ensureChainID(_dstChainID){
+    ) external nonReentrant  verifyCaller(_liquidator){
         address(exitPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
                 IExitPositionsManager.liquidateLogic.selector,
                 _poolTokenBorrowed,
                 _poolTokenCollateral,
+                _liquidator,
                 _borrower,
                 _amount,
                 _dstChainID
             )
         );
     }
-
-    /// @notice Deprecated.
-    function claimRewards(address[] calldata, bool) external returns (uint256) {}
-
     /// INTERNAL ///
 
     function _supply(
@@ -157,7 +158,8 @@ contract Morpho is MorphoGovernance {
                 msg.sender,
                 _onBehalf,
                 _amount,
-                _maxGasForMatching
+                _maxGasForMatching,
+                _dstChainID
             )
         );
     }
@@ -165,14 +167,18 @@ contract Morpho is MorphoGovernance {
     function _borrow(
         address _poolToken,
         uint256 _amount,
+        address  _borrower
         uint256 _maxGasForMatching
+        uint256 _dstChainID
     ) internal {
         address(entryPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
                 IEntryPositionsManager.borrowLogic.selector,
                 _poolToken,
                 _amount,
+                _borrower
                 _maxGasForMatching
+                _dstChaID
             )
         );
     }
@@ -180,17 +186,20 @@ contract Morpho is MorphoGovernance {
     function _withdraw(
         address _poolToken,
         uint256 _amount,
+        uint256 _supplier,
         address _receiver,
         uint256 _maxGasForMatching
+        uint32 _dstChaID
     ) internal {
         address(exitPositionsManager).functionDelegateCall(
             abi.encodeWithSelector(
                 IExitPositionsManager.withdrawLogic.selector,
                 _poolToken,
                 _amount,
-                msg.sender,
+                _supplier,
                 _receiver,
                 _maxGasForMatching
+                _dstChainID
             )
         );
     }
@@ -208,7 +217,8 @@ contract Morpho is MorphoGovernance {
                 msg.sender,
                 _onBehalf,
                 _amount,
-                _maxGasForMatching
+                _maxGasForMatching,
+                _dstChaID
             )
         );
     }

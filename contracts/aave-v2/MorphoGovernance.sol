@@ -156,7 +156,7 @@ abstract contract MorphoGovernance is MorphoUtils {
         exitPositionsManager = _exitPositionsManager;
         addressesProvider = _lendingPoolAddressesProvider;
         pool = ILendingPool(addressesProvider.getLendingPool());
-
+        setChainIDState(CURRENT_CHAINID,true);
         defaultMaxGasForMatching = _defaultMaxGasForMatching;
         maxSortedUsers = _maxSortedUsers;
     }
@@ -170,7 +170,10 @@ abstract contract MorphoGovernance is MorphoUtils {
         maxSortedUsers = _newMaxSortedUsers;
         emit MaxSortedUsersSet(_newMaxSortedUsers);
     }
-
+    /// 设置支持的链
+    function setChainIDState(uint32 _chainID,bool _value) public onlyOwner{
+        supportChain[_chainID]=_value;
+    }
     /// @notice Sets `defaultMaxGasForMatching`.
     /// @param _defaultMaxGasForMatching The new `defaultMaxGasForMatching`.
     function setDefaultMaxGasForMatching(Types.MaxGasForMatching memory _defaultMaxGasForMatching)
