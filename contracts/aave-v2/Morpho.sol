@@ -77,7 +77,7 @@ contract Morpho is MorphoGovernance {
     /// @param _poolToken The address of the market the user wants to interact with.
     /// @param _amount The amount of tokens (in underlying) to withdraw from supply.
     function withdraw(address _poolToken, uint256 _amount,uint256 _dstChainID) external nonReentrant ensureChainID(_dstChainID){
-        _withdraw(_poolToken, _amount, msg.sender, defaultMaxGasForMatching.withdraw),_dstChainID;
+        _withdraw(_poolToken, _amount, msg.sender, defaultMaxGasForMatching.withdraw,_dstChainID);
     }
 
     /// @notice Withdraws underlying tokens from a specific market.
@@ -109,7 +109,7 @@ contract Morpho is MorphoGovernance {
     function repay(
         address _poolToken,
         address _onBehalf,
-        uint256 _amount
+        uint256 _amount,
         uint256 _dstChainID
     ) external nonReentrant ensureChainID(_dstChainID){
         _repay(_poolToken, _onBehalf, _amount, defaultMaxGasForMatching.repay,_dstChainID);
@@ -124,7 +124,7 @@ contract Morpho is MorphoGovernance {
         address _poolTokenBorrowed,
         address _poolTokenCollateral,
         address _borrower,
-        uint256 _amount
+        uint256 _amount,
         uint256 _dstChainID
     ) external nonReentrant ensureChainID(_dstChainID){
         address(exitPositionsManager).functionDelegateCall(

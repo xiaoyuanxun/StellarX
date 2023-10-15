@@ -5,7 +5,7 @@ import "./interfaces/aave/IAToken.sol";
 import "./interfaces/lido/ILido.sol";
 
 import "./libraries/InterestRatesModel.sol";
-import "@morpho-dao/morpho-utils/math/WadRayMath.sol";
+import "./libraries/WadRayMath.sol";
 
 import "./MorphoStorage.sol";
 

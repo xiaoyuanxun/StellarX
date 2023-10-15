@@ -6,7 +6,7 @@ import "./interfaces/IEntryPositionsManager.sol";
 import "./interfaces/IExitPositionsManager.sol";
 import "./interfaces/IInterestRatesManager.sol";
 
-import "@morpho-dao/morpho-data-structures/HeapOrdering.sol";
+import "./libraries/HeapOrdering.sol";
 import "./libraries/Types.sol";
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";

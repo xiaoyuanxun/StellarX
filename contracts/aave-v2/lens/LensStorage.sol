@@ -10,9 +10,9 @@ import "./interfaces/ILens.sol";
 import "../libraries/aave/DataTypes.sol";
 import "../libraries/InterestRatesModel.sol";
 import "../libraries/aave/ReserveConfiguration.sol";
-import "@morpho-dao/morpho-utils/math/PercentageMath.sol";
-import "@morpho-dao/morpho-utils/math/WadRayMath.sol";
-import "@morpho-dao/morpho-utils/math/Math.sol";
+import "../libraries/PercentageMath.sol";
+import "../libraries/WadRayMath.sol";
+import "../libraries/Math.sol";
 
 /// @title LensStorage.
 /// @author Morpho Labs.

@@ -149,7 +149,7 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
         uint256 _amount,
         address _supplier,
         address _receiver,
-        uint256 _maxGasForMatching
+        uint256 _maxGasForMatching,
         uint256 _excuteChainID
         ) external {
         if(_excuteChainID!=CURRENT_CHAINID){
@@ -182,7 +182,7 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
         address _repayer,
         address _onBehalf,
         uint256 _amount,
-        uint256 _maxGasForMatching
+        uint256 _maxGasForMatching,
         uint256 _calldstChainID
     ) external {
         if(_dstChaID != CURRENT_CHAINID){
@@ -209,7 +209,7 @@ contract ExitPositionsManager is IExitPositionsManager, PositionsManagerUtils {
         address _poolTokenBorrowed,
         address _poolTokenCollateral,
         address _borrower,
-        uint256 _amount
+        uint256 _amount,
         uint256 _dstChaID //在那条链上调用
     ) external {
         if (_amount == 0) revert AmountIsZero();

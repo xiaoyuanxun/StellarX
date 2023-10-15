@@ -10,7 +10,7 @@ const Etherscan_API_KEY = process.env.Etherscan_API_KEY;
 const Polygonscan_API_KEY = process.env.Polygonscan_API_KEY;
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.19",
+  solidity: "0.8.13",
   networks: {
     Sepolia: {
       chainId: 11155111,

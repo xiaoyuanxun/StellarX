@@ -6,10 +6,10 @@ import "./interfaces/aave/IAToken.sol";
 
 import "./libraries/aave/ReserveConfiguration.sol";
 
-import "@morpho-dao/morpho-utils/DelegateCall.sol";
-import "@morpho-dao/morpho-utils/math/WadRayMath.sol";
-import "@morpho-dao/morpho-utils/math/Math.sol";
-import "@morpho-dao/morpho-utils/math/PercentageMath.sol";
+import "./libraries/DelegateCall.sol";
+import "./libraries/WadRayMath.sol";
+import "./libraries/Math.sol";
+import "./libraries/PercentageMath.sol";
 
 import "./MorphoStorage.sol";
 

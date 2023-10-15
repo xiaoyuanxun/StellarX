@@ -85,7 +85,7 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
         address _from,
         address _onBehalf,
         uint256 _amount,
-        uint256 _maxGasForMatching 
+        uint256 _maxGasForMatching,
         uint256 _chainID
     ) external {
         if(_chainID!=CURRENT_CHAINID){
@@ -100,7 +100,7 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
         if (_onBehalf == address(0)) revert AddressIsZero();
         if (_amount == 0) revert AmountIsZero();
         Types.Market memory market = market[_poolToken];
-        ERC20 underlyingToken = ERC20(market.underlyingToken);
+        // ERC20 underlyingToken = ERC20(market.underlyingToken);
 
         if (!market.isCreated) revert MarketNotCreated();
         if (marketPauseStatus[_poolToken].isSupplyPaused) revert SupplyIsPaused();
@@ -193,7 +193,7 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
     function borrowLogic(
         address _poolToken,
         uint256 _amount,
-        uint256 _maxGasForMatching
+        uint256 _maxGasForMatching,
         uint256 _excuteChainID
         ) external ensureChainID(_excuteChainID) {
             //如果想要在其它链上借出资产，则将借出消息发送到目标链上。在目标链上得到资产。
@@ -289,7 +289,6 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
             borrowerBorrowBalance.onPool,
             borrowerBorrowBalance.inP2P
         );
-        }
     }
 
     /// @dev Checks whether the user can borrow or not.
@@ -305,5 +304,5 @@ contract EntryPositionsManager is IEntryPositionsManager, PositionsManagerUtils 
         Types.LiquidityData memory values = _liquidityData(_user, _poolToken, 0, _borrowedAmount);
         return values.debtEth <= values.borrowableEth;
     }
-   
+  
 }
