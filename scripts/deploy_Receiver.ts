@@ -3,8 +3,6 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const Account_Private_Key = process.env.Account_PRIVATE_KEY;
-
 const Router_Address_Mumbai = '0x70499c328e1E2a3c41108bd3730F6670a44595D1';
 
 async function deployOnMumbai() {
@@ -15,7 +13,7 @@ async function deployOnMumbai() {
   await receiver.waitForDeployment();
 
   console.log(
-    `deploy receiver on Mumbai : ${(await receiver.getAddress())}`
+    `deploy receiver on Mumbai: ${(await receiver.getAddress())}`
   );
 }
 

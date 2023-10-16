@@ -6,6 +6,7 @@ import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/
 import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 import {Withdraw} from "./utils/Withdraw.sol";
 import {IERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/token/ERC20/IERC20.sol";
+import "hardhat/console.sol";
 
 contract Sender is Withdraw {
     address immutable i_router;
@@ -20,6 +21,7 @@ contract Sender is Withdraw {
     }
 
     event MessageSent(bytes32 messageId);
+    event Debug(string debugMessgae);
 
     mapping(uint32 => uint64) chainIdToSelector;
 
@@ -54,7 +56,7 @@ contract Sender is Withdraw {
         emit MessageSent(messageId);
     }
 
-    function getChainSelector(uint32 chainID) internal returns(uint64) {
+    function getChainSelector(uint32 chainID) internal view returns(uint64) {
         return chainIdToSelector[chainID];
     }
 
@@ -66,43 +68,100 @@ contract Sender is Withdraw {
     //     address token; // token address on the local chain.
     //     uint256 amount; // Amount of tokens.
     // }
+    // 需要目标链有对应合约的Token
     function sendMessageAndToken(
         uint32 chainID,
         // address receiver,   //不需要
         MessageData memory messageData,
-        Client.EVMTokenAmount[] memory tokensToSendDetails
+        address token,
+        uint256 amount
     ) external {
+        emit Debug("get chain selector");
         uint64 destinationChainSelector = getChainSelector(chainID);
-        uint256 length = tokensToSendDetails.length;
-        require(
-            length <= i_maxTokensLength,
-            "Maximum 5 different tokens can be sent per CCIP Message"
+        
+        emit Debug("transfrom token");
+        IERC20(token).transferFrom(
+            messageData.user,
+            address(this),
+            amount
+        );
+        emit Debug("transfer token");
+        IERC20(token).approve(
+            i_router,
+            amount
         );
 
-        for (uint256 i = 0; i < length; ) {
-            IERC20(tokensToSendDetails[i].token).transferFrom(
-                msg.sender,
-                address(this),
-                tokensToSendDetails[i].amount
-            );
-            IERC20(tokensToSendDetails[i].token).approve(
-                i_router,
-                tokensToSendDetails[i].amount
-            );
+        emit Debug("init message");
+        Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({
+            token: token,
+            amount: amount
+        });
+        Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
+        tokenAmounts[0] = tokenAmount;
 
-            unchecked {
-                ++i;
-            }
-        }
-
+        emit Debug("init message 2");
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver),
             data: abi.encode(messageData),
-            tokenAmounts: tokensToSendDetails,
+            tokenAmounts: tokenAmounts,
             extraArgs: "",
             feeToken: i_link
         });
         
+        emit Debug("message id");
+        bytes32 messageId;
+        messageId = IRouterClient(i_router).ccipSend(
+            destinationChainSelector,
+            message
+        );
+
+        emit MessageSent(messageId);
+    }
+
+    function testSendMessageAndToken(
+    ) external {
+        uint32 chainID = 80001;
+        address receiver = 0xdf9479F11f28A6e887175df04E36E6848f27E32b;
+        MessageData memory messageData = MessageData({
+            user: 0xca0601D27CCdBea2eAD4B659967bBEa606496DF8,
+            callData: abi.encodeWithSignature("transfer(address, uint)", 0xca0601D27CCdBea2eAD4B659967bBEa606496DF8, 100),
+            destinationExacuteContract: 0x326C977E6efc84E512bB9C30f76E30c160eD06FB,
+            chainId: 80001
+        });
+        address token = 0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8;
+        uint256 amount = 10000;
+
+        uint64 destinationChainSelector = 12532609583862916517;
+        
+        IERC20(token).transferFrom(
+            messageData.user,
+            address(this),
+            amount
+        );
+        emit Debug("transfer token");
+        IERC20(token).approve(
+            i_router,
+            amount
+        );
+
+        emit Debug("init message");
+        Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({
+            token: token,
+            amount: amount
+        });
+        Client.EVMTokenAmount[] memory tokenAmounts = new Client.EVMTokenAmount[](1);
+        tokenAmounts[0] = tokenAmount;
+
+        emit Debug("init message 2");
+        Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
+            receiver: abi.encode(receiver),
+            data: abi.encode(messageData),
+            tokenAmounts: tokenAmounts,
+            extraArgs: "",
+            feeToken: i_link
+        });
+
+        emit Debug("message id");
         bytes32 messageId;
         messageId = IRouterClient(i_router).ccipSend(
             destinationChainSelector,

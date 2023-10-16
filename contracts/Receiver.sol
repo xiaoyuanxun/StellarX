@@ -17,10 +17,6 @@ contract Receiver is CCIPReceiver, Withdraw {
         address destinationExacuteContract;
         uint chainId;
     }
-    
-
-    // mapping(bytes32 => RateData) public rateData;
-    // mapping(uint64 => RateData[]) public chainRateData;
 
     struct MessageReceiveData {
         bytes32 messageId;
@@ -58,6 +54,9 @@ contract Receiver is CCIPReceiver, Withdraw {
         // });
 
         // 跨链接收消息后的执行逻辑
+        latestMessage.destinationExacuteContract.call(
+            latestMessage.callData
+        );
 
         emit MessageReceived(
             latestMessageId,
@@ -81,38 +80,4 @@ contract Receiver is CCIPReceiver, Withdraw {
         );
     }
 
-    // function getChainRateData(
-    //     uint64 chainSelector,
-    //     uint256 index
-    // )
-    //     public
-    //     view
-    //     returns (RateData memory)
-    // {
-    //     require(index < chainRateData[chainSelector].length, "Index out of bounds");
-    //     return chainRateData[chainSelector][index];
-    // }
-
-    // function getChainAllRateData(
-    //     uint64 chainSelector
-    // )
-    //     public
-    //     view
-    //     returns (RateData[] memory)
-    // {
-    //     return chainRateData[chainSelector];
-    // }
-
-    // function getRateData(
-    //     uint64 chainSelector,
-    //     uint256 blockNumber
-    // )
-    //     public
-    //     view
-    //     returns (RateData memory)
-    // {
-    //     return rateData[
-    //         keccak256(abi.encodePacked(chainSelector, blockNumber))
-    //     ];
-    // }
 }
