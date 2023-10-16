@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.13;
 
 import "./interfaces/aave/IAToken.sol";
@@ -7,14 +6,9 @@ import "./interfaces/lido/ILido.sol";
 import "./libraries/InterestRatesModel.sol";
 import "./libraries/WadRayMath.sol";
 
-import "./MorphoStorage.sol";
+import "./StellarXStorage.sol";
 
-/// @title InterestRatesManager.
-/// @author Morpho Labs.
-/// @custom:contact security@morpho.xyz
-/// @notice Smart contract handling the computation of indexes used for peer-to-peer interactions.
-/// @dev This contract inherits from MorphoStorage so that Morpho can delegate calls to this contract.
-contract InterestRatesManager is IInterestRatesManager, MorphoStorage {
+contract InterestRatesManager is IInterestRatesManager, StellarXStorage {
     using WadRayMath for uint256;
 
     /// STRUCTS ///

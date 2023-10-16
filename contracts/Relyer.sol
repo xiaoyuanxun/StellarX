@@ -13,7 +13,7 @@ contract Relyer is CCIPReceiver, Withdraw {
         address user;
         bytes callData;        
         address destinationExacuteContract;
-        uint chainId;
+        uint32 chainId;
     }
 
      struct MessageReceiveData {
@@ -147,7 +147,6 @@ contract Relyer is CCIPReceiver, Withdraw {
 
     function sendToken(
         uint32 chainId,
-        //address receiver,
         Client.EVMTokenAmount[] memory tokensToSendDetails
     ) external {
         uint256 length = tokensToSendDetails.length;
@@ -211,15 +210,6 @@ contract Relyer is CCIPReceiver, Withdraw {
         latestSourceChainSelector = message.sourceChainSelector;
         latestSender = abi.decode(message.sender, (address));
         latestMessage = abi.decode(message.data, (MessageData));
-
-        // MessageReceiveData memory messageReceiveData= MessageReceiveData({
-        //     MessageReceiveData
-        //     sourceChainSelector: latestSourceChainSelector,
-        //     messageId: latestMessageId,
-        //     sender: latestSender,
-        //     message: latestMessage,
-        //     token: message.destTokenAmounts[0]
-        // });
 
         // 跨链接收消息后的执行逻辑
         protocolEndpoint.call(

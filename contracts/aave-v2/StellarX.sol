@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
-import "./MorphoGovernance.sol";
+import "./StellarXGovernance.sol";
 import "./interfaces/IRelyer.sol";
 import "./interfaces/IMorpho.sol";
-contract Morpho is MorphoGovernance {
+contract StellarX is StellarXGovernance {
     using SafeTransferLib for ERC20;
     using DelegateCall for address;
     using WadRayMath for uint256;
