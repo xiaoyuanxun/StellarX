@@ -33,8 +33,8 @@ contract Sender is Withdraw {
     receive() external payable {}
 
     function sendMessage(
-        uint64 destinationChainSelector, 
-        address receiver,
+        uint32 chainID, 
+        //address receiver,  //不需要
         MessageData memory messageData
     ) external {
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
@@ -44,7 +44,7 @@ contract Sender is Withdraw {
             extraArgs: "",
             feeToken: i_link
         });
-
+        uint64 destinationChainSelector = getChainSelector(chainID);
         bytes32 messageId;
         messageId = IRouterClient(i_router).ccipSend(
             destinationChainSelector,
@@ -68,7 +68,7 @@ contract Sender is Withdraw {
     // }
     function sendMessageAndToken(
         uint32 chainID,
-        address receiver,
+        // address receiver,   //不需要
         MessageData memory messageData,
         Client.EVMTokenAmount[] memory tokensToSendDetails
     ) external {

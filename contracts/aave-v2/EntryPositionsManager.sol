@@ -59,23 +59,12 @@ contract EntryPositionsManager is PositionsManagerUtils {
 
         function supplyLogic(
         address _poolToken,
-        address _repayer,
+        address _suppplier,
         address _onBehalf,
         uint256 _amount,
-        uint256 _maxGasForMatching,
-        uint32 _excuteChainID
-    ) external ensureChainID(_excuteChainID) {
+        uint256 _maxGasForMatching
+    ) external  {
         ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
-        if(_excuteChainID!=CURRENT_CHAINID){
-            //执行跨链调用supply;
-            //发送代币，执行交易
-            //safetransferFrom(),cross it;
-ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
-            underlyingToken.safeTransferFrom(_repayer, address(this), _amount);
-            
-                        //send message and token to crosschain;
-            //crossCall();
-        }
         if (_onBehalf == address(0)) revert AddressIsZero();
         if (_amount == 0) revert AmountIsZero();
         Types.Market memory market = market[_poolToken];
@@ -87,7 +76,7 @@ ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
         _updateIndexes(_poolToken);
         _setSupplying(_onBehalf, borrowMask[_poolToken], true);
 
-        underlyingToken.safeTransferFrom(_repayer, address(this), _amount);
+        underlyingToken.safeTransferFrom(_suppplier, address(this), _amount);
 
         Types.Delta storage delta = deltas[_poolToken];
         SupplyVars memory vars;
@@ -155,7 +144,7 @@ ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
         _updateSupplierInDS(_poolToken, _onBehalf);
 
         emit Supplied(
-            _repayer,
+            _suppplier,
             _onBehalf,
             _poolToken,
             _amount,
@@ -173,15 +162,10 @@ ERC20 underlyingToken = ERC20(market[_poolToken].underlyingToken);
         address _onBehalf,
         address _poolToken,
         uint256 _amount,
-        uint256 _maxGasForMatching,
-        uint32 _excuteChainID
-        ) external  ensureChainID(_excuteChainID) {
+        uint256 _maxGasForMatching
+        ) external  {
             //如果想要在其它链上借出资产，则将借出消息发送到目标链上。在目标链上得到资产。
-        if(_excuteChainID!=CURRENT_CHAINID){
-            //直接跨链调用借贷;
-            //send message to cross chain;
-            //crossCall();
-        }
+        
         if (_amount == 0) revert AmountIsZero();
         Types.Market memory market = market[_poolToken];
         if (!market.isCreated) revert MarketNotCreated();
