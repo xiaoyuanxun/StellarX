@@ -1,13 +1,13 @@
 # StellarX
 
 ## 项目提交信息
-项目名称
 
 1. 项目名称 : StellarX 基于[CCIP](https://docs.chain.link/ccip)的双边利率优化跨链借贷协议
 2. 所选赛道 : Public Goods
 3. 项目图片
 
     ![](./page.png)
+
 
 4. 简介
 
@@ -31,8 +31,6 @@
 
 8. Demo 视频链接 : 
     
-
-
 9. 项目 github repo 链接
 
     合约 : https://github.com/xiaoyuanxun/StellarX
@@ -42,3 +40,8 @@
 10. 该项目是本次hackathon期间，从0到1开发的项目，完全原创
 11. 项目 Demo 链接 : https://stellar-x-three.vercel.app/
 
+![](./Frames.jpg)
+
+- sender : https://sepolia.etherscan.io/address/0x9e87c722d4AeDDa7b0Cc5D2B639C3c7d4943e943#code
+
+- receiver : https://mumbai.polygonscan.com/address/0xdf9479F11f28A6e887175df04E36E6848f27E32b#code
