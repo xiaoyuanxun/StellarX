@@ -252,7 +252,7 @@ contract ExitPositionsManager is PositionsManagerUtils {
         (, , vars.liquidationBonus, vars.collateralReserveDecimals, ) = pool
         .getConfiguration(tokenCollateral)
         .getParamsMemory();
-        (, , , vars.borrowedReserveDecimals, ) = poolMem
+        (, , , vars.borrowedReserveDecimals, ) = pool
         .getConfiguration(tokenBorrowed)
         .getParamsMemory();
 
