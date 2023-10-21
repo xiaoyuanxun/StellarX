@@ -12,11 +12,7 @@ import "./libraries/Types.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-/// @title MorphoStorage.
-/// @author Morpho Labs.
-/// @custom:contact security@morpho.xyz
-/// @notice All storage variables used in Morpho contracts.
-abstract contract MorphoStorage is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+abstract contract StellarXStorage is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     /// GLOBAL STORAGE ///
     uint32 public constant CURRENT_CHAINID =80;
     mapping (uint32 => bool) public supportChain;

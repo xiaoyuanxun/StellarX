@@ -6,8 +6,16 @@ import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/
 import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 import {Withdraw} from "./utils/Withdraw.sol";
 import {IERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/token/ERC20/IERC20.sol";
+import {CCIPReceiver} from "@chainlink/contracts-ccip/src/v0.8/ccip/applications/CCIPReceiver.sol";
 
-contract Sender is Withdraw {
+contract Relyer is CCIPReceiver, Withdraw {
+    struct MessageData {
+        address user;
+        bytes callData;        
+        address destinationExacuteContract;
+        uint32 chainId;
+    }
+
      struct MessageReceiveData {
         bytes32 messageId;
         uint64 sourceChainSelector;
@@ -15,13 +23,7 @@ contract Sender is Withdraw {
         MessageData message;
         Client.EVMTokenAmount token;
     }
-    struct MessageData {
-        address user;
-        bytes callData;        
-        address destinationExacuteContract;
-        uint chainId;
-    }
-    address immutable i_router;
+
     address immutable i_link;
     uint16  immutable i_maxTokensLength;
 
@@ -29,11 +31,11 @@ contract Sender is Withdraw {
     uint64 latestSourceChainSelector;
     address latestSender;
     MessageData latestMessage;
-
+    address public protocolEndpoint;    //协议入口，用于执消息调用的对象
 
     mapping(uint32 => address) relyers; //各个链的relyer地址
-    address public protocolEndpoint;    //协议入口，用于执消息调用的对象
-   
+    
+    mapping(uint32 => uint64) chainIdToSelector;
 
     event MessageSent(bytes32 messageId);
 
@@ -44,12 +46,12 @@ contract Sender is Withdraw {
         MessageData latestMessage,
         Client.EVMTokenAmount token
     );
-    mapping(uint32 => uint64) chainIdToSelector;
 
-    constructor(address router, address link) {
-        i_router = router;
+    constructor(address router, address link, address _protocolEndpoint) CCIPReceiver(router) {
+        if (router == address(0)) revert InvalidRouter(address(0));
         i_link = link;
         i_maxTokensLength = 5;
+        protocolEndpoint = _protocolEndpoint;
         LinkTokenInterface(i_link).approve(i_router, type(uint256).max);
     }
 
@@ -57,12 +59,11 @@ contract Sender is Withdraw {
 
 //--------as a sender
     function sendMessage(
-        uint32 chainID, 
-        //address receiver,  //不需要
+        uint32 chainID,
         MessageData memory messageData
     ) external {
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
-            receiver: abi.encode(receiver),
+            receiver: abi.encode(getRelyersAddress(chainID)),
             data: abi.encode(messageData),
             tokenAmounts: new Client.EVMTokenAmount[](0),
             extraArgs: "",
@@ -82,17 +83,25 @@ contract Sender is Withdraw {
         return chainIdToSelector[chainID];
     }
 
+    function getRelyersAddress(uint32 chainID) internal returns(address) {
+        return relyers[chainID];
+    }
+
     function initChainIdToSelector(uint32 chainID, uint64 chainSelector) public onlyOwner {
         chainIdToSelector[chainID] = chainSelector;
     }
 
+    function initRelyers(uint32 chainId, address routerAddress) public onlyOwner {
+        relyers[chainId] = routerAddress;
+    }
+
+    
     // struct EVMTokenAmount {
     //     address token; // token address on the local chain.
     //     uint256 amount; // Amount of tokens.
     // }
     function sendMessageAndToken(
         uint32 chainID,
-        // address receiver,   //不需要
         MessageData memory messageData,
         Client.EVMTokenAmount[] memory tokensToSendDetails
     ) external {
@@ -120,7 +129,7 @@ contract Sender is Withdraw {
         }
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
-            receiver: abi.encode(receiver),
+            receiver: abi.encode(getRelyersAddress(chainID)),
             data: abi.encode(messageData),
             tokenAmounts: tokensToSendDetails,
             extraArgs: "",
@@ -137,8 +146,7 @@ contract Sender is Withdraw {
     }
 
     function sendToken(
-        uint64 destinationChainSelector,
-        //address receiver,
+        uint32 chainId,
         Client.EVMTokenAmount[] memory tokensToSendDetails
     ) external {
         uint256 length = tokensToSendDetails.length;
@@ -164,7 +172,7 @@ contract Sender is Withdraw {
         }
 
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
-            receiver: abi.encode(receiver),
+            receiver: abi.encode(getRelyersAddress(chainId)),
             data: "",
             tokenAmounts: tokensToSendDetails,
             extraArgs: "",
@@ -174,7 +182,7 @@ contract Sender is Withdraw {
         bytes32 messageId;
 
         messageId = IRouterClient(i_router).ccipSend(
-            destinationChainSelector,
+            getChainSelector(chainId),
             message
         );
 
@@ -203,19 +211,11 @@ contract Sender is Withdraw {
         latestSender = abi.decode(message.sender, (address));
         latestMessage = abi.decode(message.data, (MessageData));
 
-        // MessageReceiveData memory messageReceiveData= MessageReceiveData({
-        //     MessageReceiveData
-        //     sourceChainSelector: latestSourceChainSelector,
-        //     messageId: latestMessageId,
-        //     sender: latestSender,
-        //     message: latestMessage,
-        //     token: message.destTokenAmounts[0]
-        // });
-
         // 跨链接收消息后的执行逻辑
         protocolEndpoint.call(
             latestMessage.callData
         );
+
         emit MessageReceived(
             latestMessageId,
             latestSourceChainSelector,

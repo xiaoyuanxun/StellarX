@@ -11,8 +11,8 @@ const Polygonscan_API_KEY = process.env.Polygonscan_API_KEY;
 
 const config: HardhatUserConfig = {
   solidity: "0.8.13",
-  networks: {
-    
+  ...(Account_Private_Key ?  {
+       
     Sepolia: {
       chainId: 11155111,
       url: `https://eth-sepolia.g.alchemy.com/v2/${Alchemy_Private_Key_Sepolia}`,
@@ -27,7 +27,7 @@ const config: HardhatUserConfig = {
       accounts: [Account_Private_Key as string]
     }
 
-  },
+  } : {defaultHardhatNetwork: "hardhat"}),
   etherscan: {
     apiKey: Etherscan_API_KEY,
     customChains: [{

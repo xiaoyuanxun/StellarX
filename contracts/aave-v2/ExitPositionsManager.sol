@@ -206,7 +206,7 @@ contract ExitPositionsManager is PositionsManagerUtils {
     function liquidateLogic(
         address _poolTokenBorrowed,
         address _poolTokenCollateral,
-        address _liquidator
+        address _liquidator,
         address _borrower,
         uint256 _amount
     ) external  {

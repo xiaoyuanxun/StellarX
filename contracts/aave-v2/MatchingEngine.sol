@@ -1,13 +1,8 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.13;
 
-import "./MorphoUtils.sol";
+import "./StellarXUtils.sol";
 
-/// @title MatchingEngine.
-/// @author Morpho Labs.
-/// @custom:contact security@morpho.xyz
-/// @notice Smart contract managing the matching engine.
-abstract contract MatchingEngine is MorphoUtils {
+abstract contract MatchingEngine is StellarXUtils {
     using HeapOrdering for HeapOrdering.HeapArray;
     using WadRayMath for uint256;
 

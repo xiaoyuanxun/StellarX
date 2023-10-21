@@ -11,13 +11,13 @@ import "./libraries/WadRayMath.sol";
 import "./libraries/Math.sol";
 import "./libraries/PercentageMath.sol";
 
-import "./MorphoStorage.sol";
+import "./StellarXStorage.sol";
 
 /// @title MorphoUtils.
 /// @author Morpho Labs.
 /// @custom:contact security@morpho.xyz
 /// @notice Modifiers, getters and other util functions for Morpho.
-abstract contract MorphoUtils is MorphoStorage {
+abstract contract StellarXUtils is StellarXStorage {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using HeapOrdering for HeapOrdering.HeapArray;
     using PercentageMath for uint256;

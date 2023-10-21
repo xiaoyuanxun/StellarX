@@ -3,13 +3,9 @@ pragma solidity 0.8.13;
 
 import "@rari-capital/solmate/src/utils/SafeTransferLib.sol";
 
-import "./MorphoUtils.sol";
+import "./StellarXUtils.sol";
 
-/// @title MorphoGovernance.
-/// @author Morpho Labs.
-/// @custom:contact security@morpho.xyz
-/// @notice Governance functions for Morpho.
-abstract contract MorphoGovernance is MorphoUtils {
+abstract contract StellarXGovernance is StellarXUtils {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using PercentageMath for uint256;
     using SafeTransferLib for ERC20;
@@ -18,16 +14,10 @@ abstract contract MorphoGovernance is MorphoUtils {
 
     /// EVENTS ///
 
-    /// @notice Emitted when a new `defaultMaxGasForMatching` is set.
-    /// @param _defaultMaxGasForMatching The new `defaultMaxGasForMatching`.
     event DefaultMaxGasForMatchingSet(Types.MaxGasForMatching _defaultMaxGasForMatching);
 
-    /// @notice Emitted when a new value for `maxSortedUsers` is set.
-    /// @param _newValue The new value of `maxSortedUsers`.
     event MaxSortedUsersSet(uint256 _newValue);
 
-    /// @notice Emitted when the address of the `treasuryVault` is set.
-    /// @param _newTreasuryVaultAddress The new address of the `treasuryVault`.
     event TreasuryVaultSet(address indexed _newTreasuryVaultAddress);
 
     /// @notice Emitted when the `entryPositionsManager` is set.
